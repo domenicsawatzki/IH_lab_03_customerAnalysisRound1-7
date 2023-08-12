@@ -301,85 +301,7 @@ def remove_outlier(df, parameter, col, bin):
         # Handle any exceptions and provide informative error messages
         raise ValueError(f"Error occurred: {e}")  
 
-def log_transform(x):
-    x = np.log10(x)
-    if np.isfinite(x):
-        return x
-    else:
-        return 0
-
-def log_transform_for_rows(df, columns, bin_size):
-    try:
-        # Check if 'data' is a pandas DataFrame
-        if not isinstance(df, pd.DataFrame):
-            raise ValueError("Input df must be a pandas DataFrame.")  
-        
-        if not isinstance(columns, list):
-            raise ValueError("Input col must be a list.")
-        
-        if not isinstance(bin_size, int):
-            raise ValueError("Input bin must be a int.")             
-        
-        
-
-        df_removed_outlier = df.copy()
-        
-        for col in columns:
-            print(df.shape)
-            plt.hist(df[col], bins = bin_size)
-            headertext = 'Histograms for '
-            plt.title(headertext + col)
-            plt.show()
-        
-            
-            
-            df_removed_outlier[col] = df[col].apply(log_transform)
-
-            print(df_removed_outlier.shape)
-            plt.hist(df_removed_outlier[col], bins = bin_size)
-            headertext = 'Histograms for '
-            headertext2 = 'after log'
-            plt.title(headertext + col + headertext2)
-            plt.show()
-        
-        return df_removed_outlier
-        
-    except Exception as e:
-        # Handle any exceptions and provide informative error messages
-        raise ValueError(f"Error occurred: {e}")  
-
-
-
-def OneHot(df):
-    try:
-        # Check if 'data' is a pandas DataFrame
-        if not isinstance(df, pd.DataFrame):
-            raise ValueError("Input df must be a pandas DataFrame.")  
-        
-
-        from sklearn.preprocessing import OneHotEncoder
-
-        # Initialize the OneHotEncoder
-        encoder = OneHotEncoder(drop='first')
-
-        # Fit the encoder on the categorical data
-        encoder.fit(df)
-
-        # Transform the categorical data using the fitted encoder
-        encoded_df = encoder.transform(df)
-
-        # Convert the encoded data to a pandas DataFrame
-        encoded_df = pd.DataFrame(encoded_df.toarray(), columns=encoder.get_feature_names_out(df.columns))
-
-        encoded_df
-
-        return encoded_df
-        
-    except Exception as e:
-        # Handle any exceptions and provide informative error messages
-        raise ValueError(f"Error occurred: {e}")  
-
-def train_test(X, y):
+def split_the_data_into_train_test_datasets(X, y, factor):
     try:
         # Check if 'data' is a pandas DataFrame
         if not isinstance(X, pd.DataFrame):
@@ -388,7 +310,7 @@ def train_test(X, y):
         # train-test-split
         from sklearn.model_selection import train_test_split as tts
 
-        X_train, X_test, y_train, y_test=tts(X, y, test_size=.2)
+        X_train, X_test, y_train, y_test=tts(X, y, test_size=factor)
         
         print('X_train', X_train.shape)
         print('y_train', y_train.shape)
@@ -400,71 +322,24 @@ def train_test(X, y):
     except Exception as e:
         # Handle any exceptions and provide informative error messages
         raise ValueError(f"Error occurred: {e}")  
-
-
-
-
-    
-def run_and_test_linear_model(X_train, X_test, y_train, y_test):
-    
-    from sklearn.linear_model import LinearRegression as LinReg
-    
-    linreg=LinReg()    # model
-    linreg.fit(X_train, y_train)   # model train
-    y_pred_linreg=linreg.predict(X_test)   # model prediction
     
 
-    train_r2=linreg.score(X_train, y_train)
-    test_r2=linreg.score(X_test, y_test)
-
-    print ('train r2 score: {} -- test r2 score: {}'.format(train_r2, test_r2))
-    
+def predict_data_and_validate_model(X, y, model):
+    y_predicted = model.predict(X)
     from sklearn.metrics import mean_squared_error as mse
-
-    train_mse=mse(linreg.predict(X_train), y_train)
-    test_mse=mse(linreg.predict(X_test), y_test)
-
-
-    print ('train MSE: {} -- test MSE: {}'.format(train_mse, test_mse))
-    print ('train RMSE: {} -- test RMSE: {}'.format(train_mse**.5, test_mse**.5))
-    
     from sklearn.metrics import mean_absolute_error as mae
-
-    train_mae=mae(linreg.predict(X_train), y_train) #MAE
-    test_mae=mae(linreg.predict(X_test), y_test)
-
-
-    print ('Model: {}, train MAE: {} -- test MAE: {}'.format('linear', train_mae, test_mae))
     
-    return y_pred_linreg
+    r2 = round(model.score(X, y), 3)
+    mse = round(mse(y_predicted, y), 3)
+    mae = round(mae(y_predicted, y), 3)
+    
+    print ('The r2 score is: {}.'.format(r2))
+    print ('The MSE is: {}.'.format(mse))
+    print ('The RMSE is: {:.3f}.'.format(mse**.5))
+    print ('The MAE is: {}.'.format(mae))
+    print ('\n')
+    
+    return 
 
 
 
-    # for i in range(len(models)):
-        
-    #     preds[i] = models[i].predict(X_test)
-        
-    #     train_score=models[i].score(X_train, y_train) #R2
-    #     test_score=models[i].score(X_test, y_test)
-
-    #     print ('Model: {}, train R2: {} -- test R2: {}'.format(model_names[i], train_score, test_score))
-        
-        
-    #     from sklearn.metrics import mean_squared_error as mse
-    #     train_mse=mse(models[i].predict(X_train), y_train) #MSE
-    #     test_mse=mse(preds[i], y_test)
-
-    #     print ('Model: {}, train MSE: {} -- test MSE: {}'.format(model_names[i], train_mse, test_mse))
-
-    #     train_rmse=mse(models[i].predict(X_train), y_train)**0.5 #RMSE
-    #     test_rmse=mse(preds[i], y_test)**0.5
-
-    #     print ('Model: {}, train RMSE: {} -- test RMSE: {}'.format(model_names[i], train_rmse, test_rmse))
-        
-    #     from sklearn.metrics import mean_absolute_error as mae
-            
-    #     train_mae=mae(models[i].predict(X_train), y_train) #MAE
-    #     test_mae=mae(preds[i], y_test)
-
-    #     print ('Model: {}, train MAE: {} -- test MAE: {}'.format(model_names[i], train_mae, test_mae))
-    #     print('\n')
